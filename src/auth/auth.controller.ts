@@ -1,19 +1,21 @@
-import { Controller, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req } from '@nestjs/common';
+import { AuthService } from '@auth/auth.service';
+import { UserDocument } from '@user/schema/user.schema';
+import { CreateUserDto } from '@user/dto/create-user.dto';
+import { UseBasicAuth } from '@auth/decorator/basic.decorator';
 
 @Controller('auth')
 export class AuthController {
-  @Patch()
-  async resetPassword() {}
+  constructor(private readonly authService: AuthService) {}
 
-  @Patch()
-  async forgotPassword() {}
+  @Post('signin')
+  @UseBasicAuth()
+  async signin(@Req() { user }: { user: UserDocument }) {
+    return await this.authService.signin(user);
+  }
 
-  @Post()
-  async activateAccount() {}
-
-  @Post()
-  async signin() {}
-
-  @Post()
-  async signup() {}
+  @Post('signup')
+  async signup(@Body() userData: CreateUserDto) {
+    return await this.authService.signup(userData);
+  }
 }

@@ -10,9 +10,7 @@ import { ClientSession, FilterQuery, Types, UpdateQuery } from 'mongoose';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectModel(User.name, 'default') private userModel: UserModel,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: UserModel) {}
 
   async findAll(
     conditions: FilterQuery<IUser>,
@@ -73,11 +71,10 @@ export class UserService {
   }
 
   async resetPassword(
-    userId: Types.ObjectId,
+    user: UserDocument,
     newPassword: string,
     session?: ClientSession,
   ): Promise<UserDocument> {
-    const user = await this.get(userId, session);
     await user.changePassword(newPassword);
     return await user.save({ session });
   }
