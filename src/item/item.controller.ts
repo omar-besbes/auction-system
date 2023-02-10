@@ -5,6 +5,7 @@ import {
   Get,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { ItemService } from './item.service';
@@ -27,16 +28,30 @@ export class ItemController {
   }
 
   @Get('published')
-  async findPublished() {
-    return await this.itemService.findAll({ state: ItemState.published });
+  async findPublished(
+    @Query('sort') sort?: 'highest' | 'latest',
+    @Query('paginate') page?: number,
+  ) {
+    return await this.itemService.findAll(
+      { state: ItemState.published },
+      page,
+      sort,
+    );
   }
 
   @Get('ongoing')
   @UseJwtAuth()
-  async findOnGoing() {
-    return await this.itemService.findAll({
-      state: { $in: [ItemState.draft, ItemState.possession] },
-    });
+  async findOnGoing(
+    @Query('sort') sort?: 'highest' | 'latest',
+    @Query('paginate') page?: number,
+  ) {
+    return await this.itemService.findAll(
+      {
+        state: { $in: [ItemState.draft, ItemState.possession] },
+      },
+      page,
+      sort,
+    );
   }
 
   @Get('mine')

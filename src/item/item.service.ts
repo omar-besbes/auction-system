@@ -25,11 +25,20 @@ export class ItemService {
 
   async findAll(
     conditions: FilterQuery<IItem>,
+    page = 1,
+    sorted: 'highest' | 'latest' = 'highest',
     session?: ClientSession,
   ): Promise<PopulatedItemDocument[]> {
+    const itemPerPage = 10;
     return await this.itemModel
       .find(conditions, {}, { session })
       .populate<{ lastBid: BidDocument }>({ path: 'lastBid' })
+      .sort({
+        currentPrice: sorted === 'highest' ? 'desc' : 'asc',
+        updatedAt: sorted === 'latest' ? 'desc' : 'asc',
+      })
+      .skip(itemPerPage * (page - 1))
+      .limit(itemPerPage)
       .exec();
   }
 
