@@ -3,6 +3,7 @@
 </p>
 
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
   <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
@@ -24,12 +25,36 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is a minimal auction system. This system allows users to do the following:
+
+- create an account
+- login
+- create an item
+- publish an item (that will be available for bidding)
+- bid on an item
+
+For a more concise description of this system's api, please check the section on Documentation.
 
 ## Installation
 
 ```bash
 $ npm install
+```
+
+## Config
+
+```
+# JWT CONFIG
+JWT_SECRET = <Your JWT secret>
+JWT_MAXIMUM_AGE = < JWT token life >
+
+# MONGODB CONFIG
+MONGO_USERNAME = <Username of a user in the database>
+MONGO_PASSWORD = <Password of the user>
+MONGO_HOST = <Host provided by MongoDB Atlas or private host>
+MONGO_URI=mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_HOST}/?retryWrites=true&w=majority
+
+# Note: if you don't use MongoDB Atlas, you will use another MONGO_URI format. 
 ```
 
 ## Running the app
@@ -58,9 +83,22 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Documentation
+
+Documentation in this project is generated using [Swagger](https://swagger.io).
+Please make sure to install the application and then run :
+
+```bash
+$ npm run start
+```
+
+To consult Swagger documentation, simply open this url on your
+browser: [http://localhost:3000/api](http://localhost:3000/api).
+
 ## Support
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If
+you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
 ## Stay in touch
 
