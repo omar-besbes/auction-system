@@ -3,8 +3,10 @@ import { AuthService } from '@auth/auth.service';
 import { UserDocument } from '@user/schema/user.schema';
 import { CreateUserDto } from '@user/dto/create-user.dto';
 import { UseBasicAuth } from '@auth/decorator/basic.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('auth')
+@ApiTags('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
