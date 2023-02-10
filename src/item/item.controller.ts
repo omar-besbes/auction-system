@@ -3,40 +3,62 @@ import {
   Controller,
   Delete,
   Get,
-  Param,
   Patch,
   Post,
+  Req,
 } from '@nestjs/common';
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
-import { ItemDto } from './dto/item.dto';
+import { UseJwtAuth } from '@auth/decorator/jwt.decorator';
+import { UserDocument } from '@user/schema/user.schema';
+import { Types } from 'mongoose';
+import { ItemState } from '@item/schema/item.schema';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('item')
+@ApiTags('item')
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
   @Post()
-  create(@Body() createItemDto: CreateItemDto) {
-    return this.itemService.create(createItemDto);
+  @UseJwtAuth()
+  async create(@Body() createItemDto: CreateItemDto) {
+    return await this.itemService.create(createItemDto);
   }
 
-  @Get()
-  findAll() {
-    return this.itemService.findAll();
+  @Get('published')
+  async findPublished() {
+    return await this.itemService.findAll({ state: ItemState.published });
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.itemService.findOne(+id);
+  @Get('ongoing')
+  @UseJwtAuth()
+  async findOnGoing() {
+    return await this.itemService.findAll({
+      state: { $in: [ItemState.draft, ItemState.possession] },
+    });
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateItemDto: ItemDto) {
-    return this.itemService.update(+id, updateItemDto);
+  @Get('mine')
+  @UseJwtAuth()
+  async findMine(@Req() { user }: { user: UserDocument }) {
+    return await this.itemService.findByOwner(user.id);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.itemService.remove(+id);
+  @Patch('publish')
+  @UseJwtAuth()
+  async publish(
+    @Body('itemId') id: Types.ObjectId,
+    @Req() { user }: { user: UserDocument },
+  ) {
+    return await this.itemService.update(id, user._id, {
+      state: ItemState.published,
+    });
+  }
+
+  @Delete('remove')
+  @UseJwtAuth()
+  async remove(@Body('itemId') id: Types.ObjectId) {
+    return await this.itemService.remove(id);
   }
 }
