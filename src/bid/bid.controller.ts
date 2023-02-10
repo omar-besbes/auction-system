@@ -1,42 +1,37 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Req } from '@nestjs/common';
 import { BidService } from './bid.service';
 import { CreateBidDto } from './dto/create-bid.dto';
-import { UpdateBidDto } from './dto/update-bid.dto';
+import { startSession, Types } from 'mongoose';
+import { UserDocument } from '@user/schema/user.schema';
+import { UseJwtAuth } from '@auth/decorator/jwt.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('bid')
+@ApiTags('bid')
+@UseJwtAuth()
 export class BidController {
   constructor(private readonly bidService: BidService) {}
 
-  @Post()
-  create(@Body() createBidDto: CreateBidDto) {
-    return this.bidService.create(createBidDto);
+  @Post('create')
+  async create(@Body() createBidDto: CreateBidDto) {
+    const session = await startSession();
+    return await session.withTransaction(async (session) => {
+      return await this.bidService.create(createBidDto, session);
+    });
   }
 
-  @Get()
-  findAll() {
-    return this.bidService.findAll();
+  @Get('mine')
+  findMine(@Req() { user }: { user: UserDocument }) {
+    return this.bidService.findByBidder(user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bidService.findOne(+id);
+  @Get('item')
+  findByItem(@Body('itemId') id: Types.ObjectId) {
+    return this.bidService.findByItem(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBidDto: UpdateBidDto) {
-    return this.bidService.update(+id, updateBidDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.bidService.remove(+id);
+  @Delete('remove')
+  remove(@Body('itemId') id: Types.ObjectId) {
+    return this.bidService.remove(id);
   }
 }

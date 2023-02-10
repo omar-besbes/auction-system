@@ -1,26 +1,72 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBidDto } from './dto/create-bid.dto';
-import { UpdateBidDto } from './dto/update-bid.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Bid, BidDocument, BidModel, IBid } from '@bid/schema/bid.schema';
+import { ClientSession, Types, UpdateQuery } from 'mongoose';
+import { ItemService } from '@item/item.service';
+import { ItemState } from '@item/schema/item.schema';
 
 @Injectable()
 export class BidService {
-  create(createBidDto: CreateBidDto) {
-    return 'This action adds a new bid';
+  constructor(
+    @InjectModel(Bid.name) private readonly bidModel: BidModel,
+    private readonly itemService: ItemService,
+  ) {}
+
+  async create(
+    bidData: CreateBidDto,
+    session: ClientSession,
+  ): Promise<BidDocument[]> {
+    const item = await this.itemService.findById(bidData.item, session);
+
+    if (item.owner === bidData.bidder)
+      throw new BadRequestException('One can not bid on his own items');
+
+    if (item.lastBid.price >= bidData.price)
+      throw new BadRequestException(
+        `The new must be higher than the current bid price (${item.lastBid.price})`,
+      );
+
+    const [bid] = await this.bidModel.create([bidData], { session });
+    item.lastBid = bid;
+    await item.save({ session });
+    return [bid];
   }
 
-  findAll() {
-    return `This action returns all bid`;
+  async findAll(session?: ClientSession): Promise<BidDocument[]> {
+    return await this.bidModel.find({}, {}, { session }).exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} bid`;
+  async findByBidder(
+    bidderId: Types.ObjectId,
+    session?: ClientSession,
+  ): Promise<BidDocument[]> {
+    return await this.bidModel
+      .find({ bidder: bidderId }, {}, { session })
+      .exec();
   }
 
-  update(id: number, updateBidDto: UpdateBidDto) {
-    return `This action updates a #${id} bid`;
+  async findByItem(
+    itemId: Types.ObjectId,
+    session?: ClientSession,
+  ): Promise<BidDocument[]> {
+    return await this.bidModel
+      .find({ item: itemId, state: ItemState.published }, {}, { session })
+      .exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} bid`;
+  async update(
+    id: number,
+    item: UpdateQuery<IBid>,
+    session?: ClientSession,
+  ): Promise<BidDocument> {
+    return await this.bidModel.findByIdAndUpdate(id, item, { session }).exec();
+  }
+
+  async remove(
+    id: Types.ObjectId,
+    session?: ClientSession,
+  ): Promise<BidDocument> {
+    return await this.bidModel.findByIdAndDelete(id, { session }).exec();
   }
 }
