@@ -27,8 +27,14 @@ export class BidService {
         `The new must be higher than the current bid price (${item.lastBid.price})`,
       );
 
+    if (item.timeWindow && item.timeWindow.getTime() < Date.now()) {
+      await this.itemService.close(item.id, bidData.bidder, session);
+      throw new BadRequestException('Bidding on this item is completed');
+    }
+
     const [bid] = await this.bidModel.create([bidData], { session });
     item.lastBid = bid;
+    item.currentPrice = bid.price;
     await item.save({ session });
     return [bid];
   }

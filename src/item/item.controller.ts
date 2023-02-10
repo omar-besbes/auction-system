@@ -20,7 +20,7 @@ import { ApiTags } from '@nestjs/swagger';
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
-  @Post()
+  @Post('create')
   @UseJwtAuth()
   async create(@Body() createItemDto: CreateItemDto) {
     return await this.itemService.create(createItemDto);
@@ -54,6 +54,15 @@ export class ItemController {
     return await this.itemService.update(id, user._id, {
       state: ItemState.published,
     });
+  }
+
+  @Patch('close')
+  @UseJwtAuth()
+  async close(
+    @Body('itemId') id: Types.ObjectId,
+    @Req() { user }: { user: UserDocument },
+  ) {
+    return await this.itemService.close(id, user._id);
   }
 
   @Delete('remove')

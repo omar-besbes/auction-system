@@ -16,6 +16,7 @@ export interface IItem {
   lastBid?: Types.ObjectId;
   startingPrice?: number;
   currentPrice?: number;
+  timeWindow?: Date;
   state: ItemState;
 }
 
@@ -88,6 +89,12 @@ export class Item implements IItem {
     default: ItemState.draft,
   })
   state: ItemState;
+
+  @Prop({
+    type: Date,
+    default: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+  })
+  timeWindow: Date;
 }
 
 export const ItemSchema = SchemaFactory.createForClass<IItem, ItemModel>(Item);

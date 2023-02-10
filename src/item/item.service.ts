@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateItemDto } from './dto/create-item.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -63,6 +63,25 @@ export class ItemService {
       .findOneAndUpdate({ _id: id, owner: userId }, { ...item }, { session })
       .populate<{ lastBid: BidDocument }>({ path: 'lastBid' })
       .exec();
+  }
+
+  async close(
+    id: Types.ObjectId,
+    userId: Types.ObjectId,
+    session?: ClientSession,
+  ): Promise<ItemDocument> {
+    const item = await this.itemModel
+      .findById(id, {}, { session })
+      .populate<{ lastBid: BidDocument }>({ path: 'lastBid' })
+      .exec();
+
+    if (item.owner !== userId)
+      throw new BadRequestException('You are not the owner of this item');
+
+    item.owner = item.lastBid.bidder;
+    item.state = ItemState.possession;
+    delete item.startingPrice;
+    return await item.save({ session });
   }
 
   async remove(
